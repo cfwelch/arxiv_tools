@@ -1,7 +1,7 @@
 
 from dateutil.parser import parse
 
-FILENAME = 'arxiv_july_trip'
+FILENAME = 'test'
 
 def main():
     lines = []
@@ -10,6 +10,8 @@ def main():
 
     entry_set = []
     abstract = False
+    title = False
+    authors = False
     entry = {}
     for line in lines:
         if line.startswith('-----------'):
@@ -28,16 +30,27 @@ def main():
 
         if line.startswith('Title: '):
             entry['title'] = line.strip()[7:]
+            title = True
 
         if line.startswith('Authors: '):
             entry['authors'] = line.strip()[9:]
+            title = False
+            authors = True
+
+        if line.startswith('Categories:'):
+            authors = False
 
         if line.startswith('\\\\ ( https:'):
             entry['url'] = line[5:line.index(' , ')]
             abstract = False
         
         if line.startswith('  '):
-            abstract = True
+            if title:
+                entry['title'] += ' ' + line.strip()
+            elif authors:
+                entry['authors'] += ' ' + line.strip()
+            else:
+                abstract = True
 
         if abstract:
             if 'abstract' not in entry:
@@ -45,15 +58,19 @@ def main():
             else:
                 entry['abstract'] += ' ' + line.strip()
 
+            # If there is \\, then we were actually in the comments section, so clear it and record from that point
+            if line.startswith('\\\\'):
+                del entry['abstract']
+
     for entry in entry_set:
         entry['title'] = entry['title'].replace('"', '\'')
         entry['authors'] = entry['authors'].replace('"', '\'')
         entry['abstract'] = entry['abstract'].replace('"', '\'')
 
     with open('output_arxiv.csv', 'w') as handle:
-        handle.write('Title,Authors,Month,Year,URL,Abstract\n')
+        handle.write('Title,Authors,Month,Year,URL,Abstract,First Pass\n')
         for entry in entry_set:
-            handle.write('"' + entry['title'] + '","' + entry['authors'] + '",' + str(entry['month']) + ',' + str(entry['year']) + ',"' + entry['url'] + '","' + entry['abstract'] + '"\n')
+            handle.write('"' + entry['title'] + '","' + entry['authors'] + '",' + str(entry['month']) + ',' + str(entry['year']) + ',"' + entry['url'] + '","' + entry['abstract'] + '","No"\n')
 
 if __name__ == '__main__':
     main()
