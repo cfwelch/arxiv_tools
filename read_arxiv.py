@@ -19,7 +19,7 @@ def main():
         entry['abstract'] = entry['abstract'].replace('"', '\'')
 
     with open('output_arxiv.csv', 'w') as handle:
-        handle.write('Title,Authors,Month,Year,URL,Abstract,First Pass\n')
+        handle.write('Title,Author,Month,Year,URL,Abstract,First Pass\n')
         for entry in entry_set:
             handle.write('"' + entry['title'] + '","' + entry['authors'] + '",' + str(entry['month']) + ',' + str(entry['year']) + ',"' + entry['url'] + '","' + entry['abstract'] + '","No"\n')
 
